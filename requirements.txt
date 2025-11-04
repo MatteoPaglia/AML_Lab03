@@ -1,1 +1,16 @@
+# Dipendenze consigliate per il progetto AML_Lab03
+# Modifica o specifica versioni precise se necessario
 
+numpy>=1.23
+scipy>=1.9
+pandas>=1.5
+scikit-learn>=1.1
+matplotlib>=3.5
+seaborn>=0.12
+scikit-image>=0.19
+jupyterlab>=3.4
+notebook>=6.5
+tqdm>=4.64
+joblib>=1.2
+statsmodels>=0.13
+xgboost>=1.7
