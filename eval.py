@@ -14,7 +14,7 @@ import wandb
 
 # Import custom modules
 from dataset import CustomImageDataset, create_annotations_csv
-from models import create_vgg16_model, count_trainable_parameters
+from models import create_vgg16_model
 from utils import get_val_test_transforms
 
 # La funzione validate è quella che esegue la valutazione
