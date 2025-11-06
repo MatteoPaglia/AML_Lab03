@@ -17,7 +17,7 @@ def get_train_transforms(image_size=224):
     """
     return transforms.Compose([
         transforms.Resize(image_size),
-        transforms.CenterCrop(image_size),
+        #transforms.CenterCrop(image_size),
         transforms.RandomHorizontalFlip(p=0.5),  # Augmentation
         transforms.ToTensor(),
         transforms.Normalize(
@@ -41,7 +41,7 @@ def get_val_test_transforms(image_size=224):
     """
     return transforms.Compose([
         transforms.Resize(image_size),
-        transforms.CenterCrop(image_size),  # Deterministic center crop
+        #transforms.CenterCrop(image_size),  # Deterministic center crop
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],  # ImageNet stats
