@@ -77,22 +77,9 @@ def validate(model, validloader, device, criterion):
 
 
 
-def train(model, trainloader, validloader, device, optimizer, criterion, args, wandb_run=None):
+def train(model, trainloader, validloader, device, optimizer, criterion, params, wandb_run=None):
     """
-    Main training loop following Lab02 style.
-    
-    Args:
-        model: PyTorch model
-        trainloader: DataLoader for training
-        validloader: DataLoader for validation
-        device: Device to run on
-        optimizer: Optimizer
-        criterion: Loss function
-        args: Command line arguments
-        wandb_run: Wandb run object (optional)
-    
-    Returns:
-        tuple: (train_losses, valid_losses, valid_accuracies)
+    Main training loop. Usa 'params' per la configurazione.
     """
     train_losses = []
     valid_losses = []
@@ -103,7 +90,7 @@ def train(model, trainloader, validloader, device, optimizer, criterion, args, w
     print("STARTING TRAINING")
     print("="*60)
     
-    for epoch in range(args.epochs):
+    for epoch in range(params['epochs']):
         # Training
         train_loss = train_one_epoch(model, trainloader, device, optimizer, criterion)
         train_losses.append(train_loss)
@@ -114,24 +101,24 @@ def train(model, trainloader, validloader, device, optimizer, criterion, args, w
         valid_accuracies.append(valid_acc)
         
         # Print progress
-        print(f"Epoch [{epoch+1}/{args.epochs}] "
+        print(f"Epoch [{epoch+1}/{params['epochs']}] "
               f"Train Loss: {train_loss:.4f} | "
               f"Valid Loss: {valid_loss:.4f} | "
               f"Valid Acc: {valid_acc:.4f}")
         
-        # 3. Log metrics over time to visualize performance (slide style)
+        # 3. Log metrics over time
         if wandb_run:
             wandb_run.log({
                 'epoch': epoch + 1,
                 'train_loss': train_loss,
                 'valid_loss': valid_loss,
                 'valid_accuracy': valid_acc,
-                'learning_rate': optimizer.param_groups[0]['lr']  # Log current LR
+                'learning_rate': optimizer.param_groups[0]['lr']
             })
         
         # Save checkpoint
-        if (epoch + 1) % args.save_every == 0 or valid_loss < best_val_loss:
-            checkpoint_path = os.path.join(args.checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
+        if (epoch + 1) % params['save_every'] == 0 or valid_loss < best_val_loss:
+            checkpoint_path = os.path.join(params['checkpoint_dir'], f'checkpoint_epoch_{epoch+1}.pth')
             torch.save({
                 'epoch': epoch + 1,
                 'model_state_dict': model.state_dict(),
@@ -144,14 +131,14 @@ def train(model, trainloader, validloader, device, optimizer, criterion, args, w
             
             if valid_loss < best_val_loss:
                 best_val_loss = valid_loss
-                best_path = os.path.join(args.checkpoint_dir, 'best_model.pth')
+                best_path = os.path.join(params['checkpoint_dir'], 'best_model.pth')
+                
+                # Salviamo il checkpoint migliore
                 torch.save({
                     'epoch': epoch + 1,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
-                    'train_loss': train_loss,
                     'valid_loss': valid_loss,
-                    'valid_accuracy': valid_acc,
                 }, best_path)
                 print(f"  ✓ New best model saved: {best_path}")
     
@@ -161,6 +148,7 @@ def train(model, trainloader, validloader, device, optimizer, criterion, args, w
     print("="*60 + "\n")
     
     return train_losses, valid_losses, valid_accuracies
+
 
 
 def main():
