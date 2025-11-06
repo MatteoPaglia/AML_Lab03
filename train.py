@@ -14,7 +14,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 
 # Import custom modules
 from dataset import CustomImageDataset, create_annotations_csv
-from models import create_vgg16_model, count_trainable_parameters
+from models import create_vgg16_model
 from utils import get_train_transforms, get_val_test_transforms, plot_training_history
 
 # Rimuoviamo la funzione parse_args() e la classe Config
@@ -245,8 +245,7 @@ def main():
     )
     model = model.to(device)
     
-    trainable, total = count_trainable_parameters(model)
-    print(f"  - Trainable parameters: {trainable:,} / {total:,}")
+    
     print(f"  - Mode: {'Feature Extraction' if params['freeze_base'] else 'Full Fine-tuning'}")
     
     # Watch model with wandb (log gradients and parameters)
