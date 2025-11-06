@@ -265,7 +265,7 @@ def main():
     
     # Train
     train_losses, valid_losses, valid_accuracies = train(
-        model, trainloader, validloader, device, optimizer, criterion, params, wandb_run
+        model, trainloader, device, optimizer, criterion, params, wandb_run
     )
     
     # Plot training history
