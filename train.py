@@ -77,54 +77,90 @@ def validate(model, validloader, device, criterion):
 
 
 
-def train(model, trainloader, device, optimizer, criterion, params, wandb_run=None):
+def train(model, trainloader, validloader, device, optimizer, criterion, args, wandb_run=None):
     """
-    Main training loop (TRAIN ONLY).
+    Main training loop following Lab02 style.
+    
+    Args:
+        model: PyTorch model
+        trainloader: DataLoader for training
+        validloader: DataLoader for validation
+        device: Device to run on
+        optimizer: Optimizer
+        criterion: Loss function
+        args: Command line arguments
+        wandb_run: Wandb run object (optional)
+    
+    Returns:
+        tuple: (train_losses, valid_losses, valid_accuracies)
     """
     train_losses = []
+    valid_losses = []
+    valid_accuracies = []
+    best_val_loss = float('inf')
     
     print("\n" + "="*60)
     print("STARTING TRAINING")
     print("="*60)
     
-    for epoch in range(params['epochs']):
+    for epoch in range(args.epochs):
         # Training
         train_loss = train_one_epoch(model, trainloader, device, optimizer, criterion)
         train_losses.append(train_loss)
         
-        # Print progress
-        print(f"Epoch [{epoch+1}/{params['epochs']}] Train Loss: {train_loss:.4f}")
+        # Validation
+        valid_loss, valid_acc = validate(model, validloader, device, criterion)
+        valid_losses.append(valid_loss)
+        valid_accuracies.append(valid_acc)
         
-        # 3. Log metrics over time (SOLO TRAIN LOSS)
+        # Print progress
+        print(f"Epoch [{epoch+1}/{args.epochs}] "
+              f"Train Loss: {train_loss:.4f} | "
+              f"Valid Loss: {valid_loss:.4f} | "
+              f"Valid Acc: {valid_acc:.4f}")
+        
+        # 3. Log metrics over time to visualize performance (slide style)
         if wandb_run:
             wandb_run.log({
                 'epoch': epoch + 1,
                 'train_loss': train_loss,
-                'learning_rate': optimizer.param_groups[0]['lr']
+                'valid_loss': valid_loss,
+                'valid_accuracy': valid_acc,
+                'learning_rate': optimizer.param_groups[0]['lr']  # Log current LR
             })
         
-        # Save checkpoint (SALVA SEMPRE ALLA FINE DI OGNI EPOCA O SECONDO LOGICA)
-        if (epoch + 1) % params['save_every'] == 0 or (epoch + 1) == params['epochs']:
-            checkpoint_path = os.path.join(params['checkpoint_dir'], f'checkpoint_epoch_{epoch+1}.pth')
+        # Save checkpoint
+        if (epoch + 1) % args.save_every == 0 or valid_loss < best_val_loss:
+            checkpoint_path = os.path.join(args.checkpoint_dir, f'checkpoint_epoch_{epoch+1}.pth')
             torch.save({
                 'epoch': epoch + 1,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'train_loss': train_loss,
+                'valid_loss': valid_loss,
+                'valid_accuracy': valid_acc,
             }, checkpoint_path)
-            # Salviamo il modello finale come "best_model.pth" per l'eval/validate
-            if (epoch + 1) == params['epochs']:
-                best_path = os.path.join(params['checkpoint_dir'], 'best_model.pth')
-                torch.save(model.state_dict(), best_path)
-                print(f"  ✓ Final model saved as best_model.pth: {best_path}")
-            
             print(f"  ✓ Saved checkpoint: {checkpoint_path}")
             
+            if valid_loss < best_val_loss:
+                best_val_loss = valid_loss
+                best_path = os.path.join(args.checkpoint_dir, 'best_model.pth')
+                torch.save({
+                    'epoch': epoch + 1,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'train_loss': train_loss,
+                    'valid_loss': valid_loss,
+                    'valid_accuracy': valid_acc,
+                }, best_path)
+                print(f"  ✓ New best model saved: {best_path}")
+    
     print("\n" + "="*60)
     print("TRAINING COMPLETED")
+    print(f"Best Validation Loss: {best_val_loss:.4f}")
     print("="*60 + "\n")
     
-    return train_losses
+    return train_losses, valid_losses, valid_accuracies
 
 
 def main():
@@ -265,7 +301,7 @@ def main():
     
     # Train
     train_losses, valid_losses, valid_accuracies = train(
-        model, trainloader, device, optimizer, criterion, params, wandb_run
+        model, trainloader,validloader, device, optimizer, criterion, params, wandb_run
     )
     
     # Plot training history

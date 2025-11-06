@@ -63,7 +63,7 @@ def main():
     params = {
         # Data arguments
         'data_dir': './data',
-        'train_dir': 'training_set/training_set',
+        'test_dir': 'test_set/test_set',
         
         # Model arguments
         'num_classes': 2,
@@ -107,17 +107,17 @@ def main():
     criterion = nn.CrossEntropyLoss()
     
     # 2. Prepara il Dataset di Validation
-    train_path = os.path.join(params['data_dir'], params['train_dir'])
+    train_path = os.path.join(params['data_dir'], params['test_dir'])
     
-    if not os.path.exists('train_annotations.csv'):
-        print("✓ Creating training annotations...")
-        create_annotations_csv(train_path, 'train_annotations.csv')
+    if not os.path.exists('test_annotations.csv'):
+        print("✓ Creating test annotations...")
+        create_annotations_csv(train_path, 'test_annotations.csv')
         
     val_transform = get_val_test_transforms()
     
     # Usiamo il set di training per estrarre la validazione
     valid_dataset = CustomImageDataset(
-        annotations_file='train_annotations.csv',
+        annotations_file='test_annotations.csv',
         img_dir=train_path,
         transform=val_transform
     )
